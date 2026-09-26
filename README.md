@@ -1,12 +1,12 @@
 # AI Video Editing Starter Kit
 
-Draft starter system for controlling CapCut with ChatGPT through Remote Desktop Commander.
+Starter system for controlling CapCut with ChatGPT through Remote Desktop Commander.
 
 ## Status
 
-**Draft v0.2 — OS-aware installer for macOS Apple Silicon and Windows.**
+**Pre-release — customer page and prompts are prepared; tutorial video and final end-to-end device test are still pending.**
 
-This repository packages the workflow into four layers:
+The system has four layers:
 
 1. **Control** — ChatGPT + Remote Desktop Commander
 2. **Video environment** — CapCut + Python + FFmpeg / FFprobe
@@ -17,9 +17,9 @@ This repository packages the workflow into four layers:
 
 1. Connect Remote Desktop Commander.
 2. Copy `prompts/setup-installer-th.txt` into ChatGPT.
-3. The installer detects OS/architecture and installs only missing dependencies.
+3. Wait for the installer to detect the OS and validate the environment.
 4. Put the source clip on the CapCut timeline.
-5. Run the master video-editing prompt.
+5. Run `prompts/master-video-editing-th.txt`.
 
 ## ASR routing
 
@@ -58,14 +58,16 @@ The installer must reuse an existing working model/runtime when present instead 
 
 - The installer checks before installing and should not overwrite a working environment blindly.
 - Direct CapCut draft edits must be backed up before writes.
-- macOS Apple Silicon uses MLX; Windows uses faster-whisper/CTranslate2. Do not install the wrong ASR runtime for the OS.
+- macOS Apple Silicon uses MLX; Windows uses faster-whisper/CTranslate2.
 - GPU/CUDA errors on Windows must be reported before changing drivers or system CUDA components.
+- Keep this repository private until the release checklist is complete.
 
 ## Repository layout
 
 ```text
 prompts/
   setup-installer-th.txt
+  master-video-editing-th.txt
 skills/
   ai-video-speech-editing/
   tiktok-subtitle-sync/
@@ -74,8 +76,9 @@ skills/
   talking-head-polish/
   kim-sfx/
 docs/
+  release-checklist.md
 ```
 
-## Draft delivery
+## Release state
 
-The Master Video Editing Prompt is distributed with the current review HTML draft. It should always detect the current machine and read the installed skill pack for that OS before editing.
+The customer-facing HTML has been designed and QA-checked locally. Its video slot is intentionally empty until the tutorial clip is ready. Do not publish the repository or customer page until the final Windows/Mac smoke tests pass.
