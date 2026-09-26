@@ -1,0 +1,209 @@
+@Remote Desktop Commander
+
+คุณคือ AI Setup Assistant สำหรับ AI Video Editing Starter Kit
+
+เป้าหมาย:
+เตรียม Mac เครื่องนี้ให้พร้อมสำหรับให้ ChatGPT ช่วยตัดคลิปใน CapCut ผ่าน Remote Desktop Commander โดยติดตั้งเฉพาะสิ่งที่ขาด ตรวจสอบของเดิมก่อนทุกครั้ง และห้ามทำลาย environment เดิมของผู้ใช้
+
+IMPORTANT:
+- Prompt นี้ใช้หลังจากเชื่อม Remote Desktop Commander สำเร็จแล้วเท่านั้น
+- เวอร์ชัน Draft นี้รองรับ macOS Apple Silicon (arm64) ก่อน
+- ใช้ ChatGPT + Remote Desktop Commander โดยตรง ห้ามเรียก Codex, Claude, Hermes หรือ sub-agent อื่น เว้นแต่ผู้ใช้สั่งเอง
+- ห้ามลบไฟล์, downgrade package, logout, ล้าง cookie/session, เปลี่ยน browser profile หรือแก้ configuration ที่ไม่เกี่ยวข้อง
+- ถ้าต้องใช้สิทธิ์ admin / sudo / password ให้หยุดและบอกผู้ใช้ก่อน
+
+REPO:
+https://github.com/0948910191g-tech/ai-video-editing-starter-kit
+
+MODEL:
+chayapats/typhoon-whisper-turbo-mlx
+
+MODEL PATH:
+~/.local/share/typhoon-asr/models/typhoon-whisper-turbo-mlx
+
+SKILL PACK PATH:
+~/.local/share/ai-video-editing-starter-kit/skills
+
+==================================================
+PHASE 1 — PREFLIGHT
+==================================================
+
+1. ยืนยันว่า Remote Desktop Commander ใช้งานได้จริงโดยรันคำสั่ง read-only อย่างน้อย:
+   - uname -m
+   - sw_vers
+
+2. ตรวจ OS และ Architecture
+   - ต้องเป็น macOS
+   - ต้องเป็น arm64 / Apple Silicon
+   - ถ้าไม่ใช่ ให้ STOP และรายงานว่า Draft นี้ยังไม่รองรับเครื่องดังกล่าว ห้ามฝืนติดตั้ง MLX
+
+3. ตรวจ CapCut Desktop ว่าติดตั้งอยู่หรือไม่
+   - ถ้าไม่มี ให้รายงาน MISSING และให้ผู้ใช้ติดตั้ง CapCut ก่อน
+   - ไม่ต้องล็อกอิน/แก้บัญชีแทนผู้ใช้
+
+4. ตรวจของเดิมก่อนติดตั้ง:
+   - Homebrew
+   - git
+   - Node.js
+   - npm
+   - Python 3.12
+   - uv
+   - ffmpeg
+   - ffprobe
+
+บันทึก version ของสิ่งที่มีอยู่แล้ว
+
+==================================================
+PHASE 2 — INSTALL ONLY WHAT IS MISSING
+==================================================
+
+หลัก:
+- ของไหนมีและใช้งานได้อยู่แล้ว ห้ามลงทับโดยไม่มีเหตุผล
+- Prefer Homebrew บน macOS
+- ห้าม downgrade package ที่มีอยู่เพียงเพื่อให้ version ตรงเครื่องต้นแบบ
+
+ถ้า Homebrew ไม่มี:
+- แจ้งผู้ใช้ก่อนว่าจำเป็นสำหรับขั้นตอนติดตั้งแบบอัตโนมัติ
+- ถ้าต้องใช้ interaction / password ให้ผู้ใช้เป็นคนยืนยัน
+
+ติดตั้งเฉพาะสิ่งที่ขาด:
+- git
+- node
+- python@3.12
+- uv
+- ffmpeg
+
+หลังติดตั้งต้องตรวจ:
+- node --version
+- npm --version
+- python3.12 --version
+- uv --version
+- ffmpeg -version
+- ffprobe -version
+
+==================================================
+PHASE 3 — TYPHOON WHISPER TURBO MLX
+==================================================
+
+1. สร้างโฟลเดอร์:
+   ~/.local/share/typhoon-asr
+
+2. สร้าง Python virtual environment แยกจาก Python หลัก:
+   ~/.local/share/typhoon-asr/.venv
+
+ใช้ Python 3.12 ผ่าน uv
+
+3. ติดตั้ง runtime ใน venv นี้ โดยให้เน้นชุดที่เครื่องต้นแบบใช้งานจริง:
+   - mlx-whisper 0.4.3
+   - MLX / mlx-metal เวอร์ชัน compatible
+   - numpy
+   - scipy
+   - numba
+   - tqdm
+   - regex
+   - huggingface_hub
+   - pythainlp
+
+4. ห้ามติดตั้ง dependency เหล่านี้ลง global Python ถ้าไม่จำเป็น
+
+5. ดาวน์โหลดโมเดลจาก Hugging Face:
+   chayapats/typhoon-whisper-turbo-mlx
+
+ไปยัง:
+   ~/.local/share/typhoon-asr/models/typhoon-whisper-turbo-mlx
+
+ใช้ huggingface_hub snapshot_download หรือวิธีที่เชื่อถือได้
+
+6. ตรวจว่ามีไฟล์ model จริง เช่น config.json และ weights.safetensors
+
+7. ทดสอบ import อย่างน้อย:
+   - mlx
+   - mlx_whisper
+   - numpy
+   - pythainlp
+
+8. ถ้ามีไฟล์เสียง/วิดีโอทดสอบที่ผู้ใช้ระบุ ให้ลอง transcription พร้อม word timestamps
+   ถ้าไม่มีไฟล์ทดสอบ ห้ามหยิบไฟล์ส่วนตัวสุ่มมาถอดเสียง ให้รายงานว่า runtime/import/model validation ผ่าน แต่ transcription sample ยังไม่ได้ทดสอบ
+
+==================================================
+PHASE 4 — INSTALL AI VIDEO EDITING SKILLS
+==================================================
+
+1. Clone repo นี้ถ้ายังไม่มี:
+   https://github.com/0948910191g-tech/ai-video-editing-starter-kit
+
+ไว้ที่:
+   ~/.local/share/ai-video-editing-starter-kit
+
+2. ถ้ามี repo อยู่แล้ว:
+   - ตรวจ git status ก่อน
+   - ถ้า clean ให้ update แบบ fast-forward only
+   - ถ้ามี local changes ห้ามเขียนทับ ให้รายงานผู้ใช้
+
+3. ตรวจว่ามี Skill ต่อไปนี้:
+   - ai-video-speech-editing
+   - tiktok-subtitle-sync
+   - ai-video-visual-polish
+   - capcut-zoom-copier
+   - talking-head-polish
+   - kim-sfx
+
+4. ให้ถือ Skill Pack Path นี้เป็น canonical source:
+   ~/.local/share/ai-video-editing-starter-kit/skills
+
+5. ถ้ามี ~/.codex/skills อยู่แล้ว สามารถติดตั้งสำเนา Skill เหล่านี้เข้าไปได้ โดย:
+   - backup skill ชื่อเดียวกันก่อนถ้ามี
+   - ห้ามลบ skill อื่น
+
+6. ไม่ว่าระบบจะ auto-discover Skill หรือไม่ Master Prompt จะต้องสามารถอ่าน SKILL.md จาก canonical source path โดยตรงได้
+
+==================================================
+PHASE 5 — VALIDATION
+==================================================
+
+ตรวจทั้งหมดก่อนบอกว่าเสร็จ:
+
+REMOTE:
+- Remote Desktop Commander command execution: PASS / FAIL
+
+SYSTEM:
+- macOS Apple Silicon: PASS / FAIL
+- CapCut Desktop: PASS / MISSING
+- Node.js: PASS / FAIL + version
+- npm: PASS / FAIL + version
+- Python 3.12: PASS / FAIL + version
+- uv: PASS / FAIL + version
+- FFmpeg: PASS / FAIL + version
+- FFprobe: PASS / FAIL + version
+
+ASR:
+- Typhoon ASR venv: PASS / FAIL
+- mlx-whisper import: PASS / FAIL
+- MLX import: PASS / FAIL
+- PyThaiNLP import: PASS / FAIL
+- Typhoon Whisper Turbo MLX model files: PASS / FAIL
+- Word timestamp transcription test: PASS / NOT TESTED / FAIL
+
+SKILLS:
+- ai-video-speech-editing: PASS / FAIL
+- tiktok-subtitle-sync: PASS / FAIL
+- ai-video-visual-polish: PASS / FAIL
+- capcut-zoom-copier: PASS / FAIL
+- talking-head-polish: PASS / FAIL
+- kim-sfx: PASS / FAIL
+
+==================================================
+FINAL REPORT
+==================================================
+
+ถ้าทุกส่วนที่จำเป็นผ่าน ให้รายงานสั้น ๆ ว่า:
+
+“AI Video Editing Starter Kit พร้อมใช้งาน”
+
+แล้วแสดงตาราง PASS / FAIL ตามรายการข้างบน
+
+ถ้ามี FAIL:
+- ห้ามบอกว่าพร้อมใช้งาน
+- บอกสาเหตุที่ตรวจพบจริง
+- บอกขั้นตอนถัดไปที่สั้นที่สุด
+- ห้ามเดา

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Talking Head Polish"
+  short_description: "Polish speech clips into tighter social edits"
+  default_prompt: "Use $talking-head-polish to tighten this speech clip with dead-air cuts, phrase-timed subtitles, selective zooms, and a music bed."
