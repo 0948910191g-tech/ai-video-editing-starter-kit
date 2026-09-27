@@ -97,11 +97,12 @@ RUNTIME PATH:
    - regex
    - huggingface_hub
    - pythainlp
-3. ดาวน์โหลด `chayapats/typhoon-whisper-turbo-mlx` ไปที่ MODEL PATH
-4. ตรวจว่ามี model files เช่น `config.json` และ `weights.safetensors`
-5. ทดสอบ import: mlx, mlx_whisper, numpy, pythainlp
-6. ถ้ามีไฟล์ทดสอบที่ผู้ใช้ระบุ ให้ทดสอบ transcription พร้อม word timestamps
-7. ห้ามหยิบไฟล์ส่วนตัวสุ่มมาทดสอบเอง
+3. ถ้าการติดตั้งหลาย package พร้อมกันสำเร็จเพียงบางส่วน ห้ามสรุป FAIL ทันที ให้ตรวจ import ทีละตัวและไป PHASE 3C สำหรับตัวที่ขาด
+4. ดาวน์โหลด `chayapats/typhoon-whisper-turbo-mlx` ไปที่ MODEL PATH
+5. ตรวจว่ามี model files เช่น `config.json` และ `weights.safetensors`
+6. ทดสอบ import: mlx, mlx_whisper, numpy, pythainlp
+7. ถ้ามีไฟล์ทดสอบที่ผู้ใช้ระบุ ให้ทดสอบ transcription พร้อม word timestamps
+8. ห้ามหยิบไฟล์ส่วนตัวสุ่มมาทดสอบเอง
 
 ==================================================
 PHASE 3B — WINDOWS ASR BRANCH
@@ -125,17 +126,61 @@ Windows reference stack ที่ใช้กับเครื่องตั�
 2. ถ้ามี model/runtime เดิมและทดสอบผ่าน ให้ REUSE ห้ามดาวน์โหลดซ้ำ
 3. ถ้าไม่มี ให้สร้าง isolated Python 3.11 environment สำหรับ ASR
 4. ติดตั้ง `faster-whisper==1.2.1` และ dependency ที่มันต้องใช้
-5. ดาวน์โหลด/เตรียม `large-v3-turbo` เป็น CTranslate2 model ใน local model directory
-6. ถ้ามี NVIDIA GPU และ CUDA self-test ผ่าน:
+5. ติดตั้ง `pythainlp` ใน ASR environment เดียวกัน ถ้ายังไม่มี
+6. ถ้าการติดตั้งหลาย package พร้อมกันสำเร็จเพียงบางส่วน ห้ามสรุป FAIL ทันที ให้ตรวจ import ทีละตัวและไป PHASE 3C สำหรับตัวที่ขาด
+7. ดาวน์โหลด/เตรียม `large-v3-turbo` เป็น CTranslate2 model ใน local model directory
+8. ถ้ามี NVIDIA GPU และ CUDA self-test ผ่าน:
    - prefer device=`cuda`
    - prefer compute_type=`float16`
-7. ถ้า CUDA/cuBLAS มีปัญหา:
+9. ถ้า CUDA/cuBLAS มีปัญหา:
    - ห้ามสุ่มแก้ driver หรือถอน CUDA เดิม
    - รายงาน error จริงก่อน
    - สามารถทดสอบ CPU fallback ด้วย model เดิมและ compute type ที่เหมาะสมได้ แต่ต้องแจ้งว่าช้ากว่า
-8. Primary transcription ต้องใช้ original continuous source + `word_timestamps=True`
-9. อย่าเปิด VAD เป็น Editorial Authority และอย่าตัดสินว่าช่วงเงียบคือสิ่งที่ต้องลบโดยอัตโนมัติ
-10. ถ้า transcription test ใช้ VAD แล้วทำคำพูดหาย ให้ทดสอบใหม่โดยปิด VAD ก่อนสรุปว่า ASR ผิด
+10. Primary transcription ต้องใช้ original continuous source + `word_timestamps=True`
+11. อย่าเปิด VAD เป็น Editorial Authority และอย่าตัดสินว่าช่วงเงียบคือสิ่งที่ต้องลบโดยอัตโนมัติ
+12. ถ้า transcription test ใช้ VAD แล้วทำคำพูดหาย ให้ทดสอบใหม่โดยปิด VAD ก่อนสรุปว่า ASR ผิด
+
+==================================================
+PHASE 3C — DEPENDENCY RECOVERY / PYTHAINLP FALLBACK
+==================================================
+
+PyThaiNLP เป็น dependency ที่ต้องมีสำหรับ subtitle workflow
+ถ้า import `pythainlp` ไม่ผ่าน ห้ามหยุดที่ FAIL ทันที ให้ Recovery ตามลำดับนี้ก่อน
+
+หลัก:
+- ติดตั้งเฉพาะใน ASR virtual environment ของ Starter Kit
+- ห้ามติดตั้งลง global Python
+- ห้ามใช้ sudo/admin เพื่อแก้ปัญหานี้
+- หลังทุกวิธีต้องทดสอบ `import pythainlp` และแสดง version
+
+MAC:
+ASR PYTHON:
+~/.local/share/typhoon-asr/.venv/bin/python
+
+วิธี A — uv ติดตั้งเข้า venv โดยตรง:
+`~/.local/bin/uv pip install --python ~/.local/share/typhoon-asr/.venv/bin/python pythainlp`
+
+ถ้าวิธี A รันไม่ได้หรือถูกบล็อก แต่ venv ยังใช้งานได้ ให้ใช้วิธี B:
+`~/.local/share/typhoon-asr/.venv/bin/python -m pip install pythainlp`
+
+ถ้าวิธี B แจ้งว่าไม่มี pip ให้ใช้วิธี C ก่อน:
+`~/.local/share/typhoon-asr/.venv/bin/python -m ensurepip --upgrade`
+แล้วค่อยรันวิธี B ซ้ำ
+
+WINDOWS:
+- หา Python executable ของ ASR venv ที่สร้างหรือ reuse ได้จริงก่อน และเรียกค่านั้นว่า `<ASR_PYTHON>`
+- วิธี A: `uv pip install --python "<ASR_PYTHON>" pythainlp`
+- ถ้าวิธี A ใช้ไม่ได้ ให้ใช้: `"<ASR_PYTHON>" -m pip install pythainlp`
+- ถ้าไม่มี pip ให้ใช้: `"<ASR_PYTHON>" -m ensurepip --upgrade` แล้วติดตั้งซ้ำ
+
+ถ้า tool policy บล็อกคำสั่งหนึ่ง:
+- ให้ลองวิธี fallback ถัดไปที่ยังคงติดตั้งใน venv เดิม
+- ห้ามพยายาม bypass policy ด้วย shell wrapper แปลก ๆ หรือย้ายไปติดตั้ง global
+- ถ้าทุกวิธีถูกบล็อกจริง ค่อยรายงานผู้ใช้พร้อมคำสั่ง manual ที่สั้นที่สุดเพียง 1 คำสั่ง
+
+ผ่าน PHASE นี้เมื่อ:
+- `import pythainlp` สำเร็จ
+- อ่าน `pythainlp.__version__` ได้
 
 ==================================================
 PHASE 4 — INSTALL AI VIDEO EDITING SKILLS
@@ -189,13 +234,14 @@ ASR — MAC:
 - Typhoon ASR venv: PASS / FAIL
 - mlx-whisper: PASS / FAIL
 - MLX: PASS / FAIL
-- PyThaiNLP: PASS / FAIL
+- PyThaiNLP: PASS / FAIL + version
 - Typhoon Whisper Turbo MLX model: PASS / FAIL
 - Word timestamp test: PASS / NOT TESTED / FAIL
 
 ASR — WINDOWS:
 - faster-whisper 1.2.1: PASS / FAIL
 - CTranslate2 runtime: PASS / FAIL
+- PyThaiNLP: PASS / FAIL + version
 - Large-v3 Turbo model: PASS / FAIL
 - Local model path: ...
 - GPU/CUDA path: PASS / NOT AVAILABLE / FAIL
@@ -221,5 +267,6 @@ FINAL REPORT
 ถ้ามี FAIL:
 - ห้ามบอกว่าพร้อมใช้งาน
 - บอกสาเหตุที่ตรวจพบจริง
+- ก่อนขอให้ผู้ใช้รันคำสั่งเอง ต้องยืนยันก่อนว่าได้ลอง Recovery/Fallback ที่ปลอดภัยครบแล้ว
 - บอกขั้นตอนถัดไปที่สั้นที่สุด
 - ห้ามเดา
